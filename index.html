@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Misbeehave · 2-minute survey · 50% off your first order</title>
-<meta name="description" content="Beeswax lip balm in a paper tube, for women who talk back. Answer 10 quick questions and get 50% off your first order.">
+<meta name="description" content="Beeswax lip balm in a paper tube, for women who talk back. Answer 11 quick questions and get 50% off your first order.">
 <meta property="og:title" content="Misbeehave · Help us make a lip balm that talks back">
-<meta property="og:description" content="10 quick questions. 50% off your first order when we launch.">
+<meta property="og:description" content="11 quick questions. 50% off your first order when we launch.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%9D%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -510,11 +510,11 @@ html.gs-wait .hero2 .eyebrow,html.gs-wait .hero2 .wm-word,html.gs-wait .h2text,h
           <div class="h2stats" aria-label="At a glance"><div><b>5</b><span>ingredients</span></div><div><b>0%</b><span>plastic</span></div><div><b>4</b><span>flavours</span></div></div>
         </div>
         <div class="scard-wrap">
-          <p class="s-label"><span>The survey</span><i>✦</i><span>10 questions</span><i>✦</i><span>2 minutes</span></p>
+          <p class="s-label"><span>The survey</span><i>✦</i><span>11 questions</span><i>✦</i><span>2 minutes</span></p>
           <div class="scard" id="scard" aria-live="polite">
         <div class="s-top">
           <button class="s-back" type="button" id="sBack" disabled>← Back</button>
-          <span class="s-count" id="sCount"><b>01</b> / 10</span>
+          <span class="s-count" id="sCount"><b>01</b> / 11</span>
         </div>
         <div class="s-bar" aria-hidden="true"><i id="sBar"></i></div>
         <div class="s-body" id="sBody"></div>
@@ -629,7 +629,7 @@ html.gs-wait .hero2 .eyebrow,html.gs-wait .hero2 .wm-word,html.gs-wait .h2text,h
   <section class="svy">
     <div class="wrap svy-grid">
       <div class="big">50%</div>
-      <div><h2 id="svyH">off your first order. For 2 minutes of your time.</h2><p id="svyP">Help shape what the hive makes. 10 quick questions, and your reward is saved the moment you finish.</p></div>
+      <div><h2 id="svyH">off your first order. For 2 minutes of your time.</h2><p id="svyP">Help shape what the hive makes. 11 quick questions, and your reward is saved the moment you finish.</p></div>
       <a class="btn" href="#survey" id="svyBtn">Take the survey</a>
     </div>
   </section>
@@ -683,34 +683,47 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     { id: 'q1_last_used', type: 'single', q: 'When did you last put on lip balm?',
       o: ['Today', 'Sometime this week', 'Sometime this month', 'Honestly, can’t remember', OTHER] },
     { id: 'q2_brand_on_hand', type: 'multi', q: 'Which lip balm is on you right now? In your bag, pocket or desk.', grid: true, none: 'I don’t have one on me',
-      o: ['Vaseline', 'Nivea', 'Himalaya', 'Maybelline', 'Burt’s Bees', 'Plum', 'mCaffeine', 'Sugar', 'Deconstruct', 'Dot & Key', OTHER, 'I don’t have one on me'] },
+      o: ['Vaseline', 'Himalaya Herbals', 'Maybelline', 'Nivea', 'SUGAR Cosmetics', 'Dot & Key', 'Laneige', 'Indie Wild', 'Lakmé', 'Minimalist', OTHER, 'I don’t have one on me'] },
     { id: 'q3_last_bought_where', type: 'single', q: 'Where did you buy your last one?', grid: true,
       o: ['Chemist or pharmacy', 'Supermarket or kirana', 'Nykaa', 'Amazon or Flipkart', 'Blinkit, Zepto or Instamart', 'A brand’s own website', 'Someone else bought it', 'Can’t remember', OTHER] },
     { id: 'q4_last_paid', type: 'single', q: 'Roughly what did you pay for it?', grid: true,
-      o: ['Under ₹100', '₹100 to ₹199', '₹200 to ₹299', '₹300 to ₹399', '₹400 or more', 'Don’t remember', OTHER] },
+      o: ['Under ₹100', '₹100–299', '₹300–600', '₹601–900', 'More than ₹900', 'Don’t remember', OTHER] },
     { id: 'q5_why_stopped', type: 'multi', max: 2, q: 'Think about the last lip balm you stopped using. What happened?', grid: true, none: 'Still on the same one',
-      o: ['Finished it', 'Lost it', 'Made my lips drier', 'Stung or tingled', 'Smell or taste was off', 'Too sticky or greasy', 'Got bored, wanted new', OTHER, 'Still on the same one'] },
-    { id: 'q6_bought_6mo', type: 'multi', q: 'Which of these have you actually bought in the last 6 months?', none: 'None of these',
+      o: ['Finished it', 'Lost it', 'Made my lips drier', 'Smell or taste was off', 'Too sticky or greasy', 'Got bored, wanted new', OTHER, 'Still on the same one'] },
+    { id: 'q6_how_long_lasts', type: 'single', q: 'How long does one lip balm usually last you?',
+      o: ['Less than a month', '1–3 months', '3–6 months', 'More than 6 months', 'I usually lose it before it’s finished', OTHER] },
+    { id: 'q7_when_most', type: 'single', q: 'When do you use lip balm the most?',
+      o: ['Mostly in winter', 'About the same all year', 'More in AC, office or while travelling', 'Only when my lips crack', OTHER] },
+    { id: 'q8_bought_6mo', type: 'multi', q: 'Which of these have you actually bought in the last 6 months?', none: 'None of these',
       o: ['Plain lip balm', 'Tinted lip balm', 'Lip oil or gloss', 'Lipstick or liquid lipstick', OTHER, 'None of these'] },
-    { id: 'q7_reads_label', type: 'single', q: 'Have you ever flipped a lip balm over to read what’s in it?',
-      o: ['Yes, I check every time', 'Sometimes, if it’s a new brand', 'Never really thought about it', OTHER] },
-    { id: 'q8_edible', type: 'single', pre: 'Most of us end up swallowing a little lip balm, every time we eat, drink or lick our lips.',
-      q: 'Would you want one made only from ingredients clean enough to eat?',
-      o: ['Yes, that’s exactly what I want', 'Sounds good, tell me more', 'Doesn’t really matter to me', OTHER] },
-    { id: 'q9', type: 'about', q: 'Last bit about you.' },
-    { id: 'q10', type: 'email', q: 'Where should we send your 50% off code?' }
+    { id: 'q9_what_mattered', type: 'multi', max: 2, q: 'When you picked your last lip balm, what mattered most?', grid: true, shuffle: true,
+      o: ['Keeps lips soft for hours', 'Price', 'Tint or colour', 'Flavour or smell', 'Short, natural ingredient list', 'Vegan (no animal ingredients)', 'A brand I already trust', 'Plastic-free or eco packaging', 'Easy to find where I shop', 'Brand supports a cause I care about', OTHER] },
+    { id: 'q10', type: 'about', q: 'Last bit about you.' },
+    { id: 'q11', type: 'email', q: 'Where should we send your 50% off code?' }
   ];
   var AGES = ['Under 18', '18–24', '25–34', '35–44', '45+'];
   var GENDERS = ['Woman', 'Man', 'Non-binary', 'Prefer not to say'];
   var CITIES = ['Bengaluru', 'Mumbai', 'Delhi', 'Gurugram', 'Noida', 'Ghaziabad', 'Faridabad', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Jaipur', 'Udaipur', 'Jodhpur', 'Lucknow', 'Kanpur', 'Varanasi', 'Prayagraj', 'Agra', 'Chandigarh', 'Mohali', 'Ludhiana', 'Amritsar', 'Dehradun', 'Shimla', 'Indore', 'Bhopal', 'Gwalior', 'Nagpur', 'Nashik', 'Aurangabad', 'Thane', 'Navi Mumbai', 'Goa', 'Mangaluru', 'Mysuru', 'Hubballi', 'Belagavi', 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Puducherry', 'Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Warangal', 'Bhubaneswar', 'Cuttack', 'Raipur', 'Ranchi', 'Jamshedpur', 'Patna', 'Guwahati', 'Shillong', 'Siliguri', 'Srinagar', 'Jammu', 'A town or village in India', 'Outside India'];
   var HEARD = ['I know the founder', 'A friend sent it', 'Instagram or social', OTHER];
 
-  var KEY = 'mbh_survey_v3';
+  var KEY = 'mbh_survey_v4';
   function fresh(utm) { return { a: {}, i: 0, started: Date.now(), id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), utm: utm }; }
   var params = new URLSearchParams(location.search);
   var S = store(KEY) || fresh({ source: params.get('utm_source') || '', medium: params.get('utm_medium') || '', campaign: params.get('utm_campaign') || '', ref: document.referrer || '' });
   if (!S.a) S.a = {};
   function save() { store(KEY, S); }
+  function opts(q) {
+    if (!q.shuffle) return q.o;
+    S.order = S.order || {};
+    var saved = S.order[q.id];
+    if (!saved || saved.length !== q.o.length || saved.some(function (x) { return q.o.indexOf(x) < 0; })) {
+      var tail = q.o.filter(function (x) { return x === OTHER || x === q.none; });
+      var p = q.o.filter(function (x) { return tail.indexOf(x) < 0; });
+      for (var i = p.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var x = p[i]; p[i] = p[j]; p[j] = x; }
+      saved = S.order[q.id] = p.concat(tail); save();
+    }
+    return saved;
+  }
   save();
 
   var body = document.getElementById('sBody'), back = document.getElementById('sBack');
@@ -763,7 +776,7 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
       nextBtn.parentNode.hidden = !S.a[q.id];
       nextBtn.disabled = isOther && !(S.a[q.id + '_other'] || '').length;
     }
-    q.o.forEach(function (label, idx) {
+    opts(q).forEach(function (label, idx) {
       var b = optButton(label, 'single', idx, S.a[q.id] === label);
       b.addEventListener('click', function () {
         if (busy) return;
@@ -789,7 +802,8 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     body.appendChild(hint);
     var box = el('div', 's-opts' + (q.grid ? ' two' : ''));
     var other, nextBtn;
-    var btns = q.o.map(function (label, idx) {
+    var o = opts(q);
+    var btns = o.map(function (label, idx) {
       var b = optButton(label, 'multi', idx, sel.indexOf(label) > -1);
       b.addEventListener('click', function () {
         var on = sel.indexOf(label) > -1;
@@ -811,7 +825,7 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     body.appendChild(other);
     nextBtn = addFoot('Next →');
     function sync() {
-      btns.forEach(function (b, i) { b.setAttribute('aria-pressed', sel.indexOf(q.o[i]) > -1 ? 'true' : 'false'); });
+      btns.forEach(function (b, i) { b.setAttribute('aria-pressed', sel.indexOf(o[i]) > -1 ? 'true' : 'false'); });
       if (q.max) { hint.className = 's-hint' + (sel.length >= q.max ? ' warn' : ''); hint.textContent = sel.length >= q.max ? 'That’s your ' + q.max + '. Next!' : 'Pick up to ' + q.max; }
       var hasOther = sel.indexOf(OTHER) > -1;
       other.hidden = !hasOther;
@@ -836,19 +850,19 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
   }
 
   var aboutBtn;
-  function syncAbout() { if (aboutBtn) aboutBtn.textContent = (S.a.q9_age || S.a.q9_gender || S.a.q9_city) ? 'Next →' : 'Skip →'; }
+  function syncAbout() { if (aboutBtn) aboutBtn.textContent = (S.a.q10_age || S.a.q10_gender || S.a.q10_city) ? 'Next →' : 'Skip →'; }
   function renderAbout() {
     body.appendChild(el('span', 's-hint', 'All optional'));
     body.appendChild(el('p', 's-sub', 'Age'));
-    body.appendChild(chipGroup(AGES, 'q9_age', syncAbout));
+    body.appendChild(chipGroup(AGES, 'q10_age', syncAbout));
     body.appendChild(el('p', 's-sub', 'Gender'));
-    body.appendChild(chipGroup(GENDERS, 'q9_gender', syncAbout));
+    body.appendChild(chipGroup(GENDERS, 'q10_gender', syncAbout));
     var lab = el('label', 's-sub', 'Where do you live?'); lab.htmlFor = 'sCity'; body.appendChild(lab);
     var city = el('input', 's-in'); city.type = 'text'; city.id = 'sCity'; city.placeholder = 'Start typing your city or town'; city.autocomplete = 'address-level2'; city.maxLength = 60;
-    city.setAttribute('list', 'cityList'); city.value = S.a.q9_city || '';
+    city.setAttribute('list', 'cityList'); city.value = S.a.q10_city || '';
     var dl = el('datalist'); dl.id = 'cityList';
     CITIES.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
-    city.addEventListener('input', function () { S.a.q9_city = city.value.trim(); save(); syncAbout(); });
+    city.addEventListener('input', function () { S.a.q10_city = city.value.trim(); save(); syncAbout(); });
     body.appendChild(city); body.appendChild(dl);
     body.appendChild(el('p', 's-legal', 'Pick from the list or type any city, town or village.'));
     aboutBtn = addFoot('Next →');
@@ -858,9 +872,9 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
   function renderEmail() {
     body.appendChild(el('span', 's-hint', 'Last one'));
     body.appendChild(el('p', 's-sub', 'How did you hear about us? (optional)'));
-    var other = otherBox('q10_heard_from_other', 'Where did you find us?');
-    body.appendChild(chipGroup(HEARD, 'q10_heard_from', function () { other.hidden = S.a.q10_heard_from !== OTHER; if (!other.hidden) other.focus(); }));
-    other.hidden = S.a.q10_heard_from !== OTHER;
+    var other = otherBox('q11_heard_from_other', 'Where did you find us?');
+    body.appendChild(chipGroup(HEARD, 'q11_heard_from', function () { other.hidden = S.a.q11_heard_from !== OTHER; if (!other.hidden) other.focus(); }));
+    other.hidden = S.a.q11_heard_from !== OTHER;
     other.style.marginBottom = '18px';
     body.appendChild(other);
     var lab = el('label', 's-sub', 'Your email'); lab.htmlFor = 'sEmail'; body.appendChild(lab);
@@ -900,9 +914,9 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
         row[q.id + '_other'] = picked(q.id) ? j(a[q.id + '_other']) : '';
       }
     });
-    row.q9_age = j(a.q9_age); row.q9_gender = j(a.q9_gender); row.q9_city = j(a.q9_city);
-    row.q10_heard_from = j(a.q10_heard_from);
-    row.q10_heard_from_other = a.q10_heard_from === OTHER ? j(a.q10_heard_from_other) : '';
+    row.q10_age = j(a.q10_age); row.q10_gender = j(a.q10_gender); row.q10_city = j(a.q10_city);
+    row.q11_heard_from = j(a.q11_heard_from);
+    row.q11_heard_from_other = a.q11_heard_from === OTHER ? j(a.q11_heard_from_other) : '';
     row.email = j(a.email);
     row.utm_source = S.utm.source; row.utm_medium = S.utm.medium; row.utm_campaign = S.utm.campaign; row.referrer = S.utm.ref;
     row.device = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
@@ -952,7 +966,7 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
       b.onclick = function () { share('Misbeehave is making a lip balm for women who talk back. 2 minutes, and 50% off your first order:'); };
       if (hc) hc.innerHTML = 'You’re in <span>✓</span>';
     } else {
-      h.textContent = 'off your first order. For 2 minutes of your time.'; p.textContent = 'Help shape what the hive makes. 10 quick questions, and your reward is saved the moment you finish.';
+      h.textContent = 'off your first order. For 2 minutes of your time.'; p.textContent = 'Help shape what the hive makes. 11 quick questions, and your reward is saved the moment you finish.';
       b.textContent = 'Take the survey'; b.href = '#survey'; b.onclick = null;
       if (hc) hc.innerHTML = 'Take the survey <span>2′</span>';
     }
