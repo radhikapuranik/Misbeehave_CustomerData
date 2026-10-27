@@ -10,36 +10,30 @@
  * 4. In index.html, paste that URL into RESPONSES_ENDPOINT = '...'
  *
  * Each finished survey becomes one row on the "Responses" tab, in the fixed
- * column order below. If the survey questions change, update COLUMNS and run
- * rebuild() once from the editor to re-lay-out existing rows (the old layout
- * is copied to a dated "Raw backup" tab first).
+ * column order below. A typed "Other" answer is folded into its question's
+ * column (e.g. "Nykaa; Other: Airport shop") rather than getting its own.
+ * If the survey questions change, update COLUMNS and run rebuild() once from
+ * the editor to re-lay-out existing rows (the old layout is copied to a dated
+ * "Raw backup" tab first).
  */
 var SHEET_ID = '1UMbkkVFPL-ZlbD9Y2fKVr9kN5XBhMtIO9Gc6UtpotbA';
 var TAB = 'Responses';
 var DATE_FORMAT = 'd mmm yyyy, h:mm am/pm';
+var HEADER_BG = '#2b1a14', ROW_BG = '#ffffff', ALT_ROW_BG = '#f1f1f1';
 
 // [payload key, column heading, column width]
 var COLUMNS = [
   ['submitted_at', 'Submitted at', 150],
   ['email', 'Email', 220],
   ['q1_last_used', 'Q1 · Last put on lip balm', 170],
-  ['q1_last_used_other', 'Q1 · Other (typed)', 130],
   ['q2_brand_on_hand', 'Q2 · Lip balm on them right now', 220],
-  ['q2_brand_on_hand_other', 'Q2 · Other (typed)', 130],
   ['q3_where_buy', 'Q3 · Where they usually buy', 220],
-  ['q3_where_buy_other', 'Q3 · Other (typed)', 130],
   ['q4_last_paid', 'Q4 · Paid for last one', 140],
-  ['q4_last_paid_other', 'Q4 · Other (typed)', 130],
   ['q5_why_stopped', 'Q5 · Why they stopped the last one', 240],
-  ['q5_why_stopped_other', 'Q5 · Other (typed)', 130],
   ['q6_how_long_lasts', 'Q6 · How long one lasts', 170],
-  ['q6_how_long_lasts_other', 'Q6 · Other (typed)', 130],
   ['q7_when_most', 'Q7 · When they use it most', 200],
-  ['q7_when_most_other', 'Q7 · Other (typed)', 130],
   ['q8_bought_6mo', 'Q8 · Bought in last 6 months', 220],
-  ['q8_bought_6mo_other', 'Q8 · Other (typed)', 130],
   ['q9_what_mattered', 'Q9 · What mattered most', 260],
-  ['q9_what_mattered_other', 'Q9 · Other (typed)', 130],
   ['q10_age', 'Age', 80],
   ['q10_gender', 'Gender', 110],
   ['q10_city', 'City', 130],
@@ -117,8 +111,11 @@ function headerKeys(sheet) {
   if (sheet.getLastRow() > 0) return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(keyFor);
   var n = COLUMNS.length, rows = sheet.getMaxRows();
   sheet.getRange(1, 1, 1, n).setValues([COLUMNS.map(function (c) { return c[1]; })])
-    .setFontWeight('bold').setBackground('#2b1a14').setFontColor('#f6eedf')
+    .setFontWeight('bold').setFontColor('#f6eedf')
     .setWrap(true).setVerticalAlignment('middle');
+  sheet.getBandings().forEach(function (b) { b.remove(); });
+  sheet.getRange(1, 1, rows, n).applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY)
+    .setHeaderRowColor(HEADER_BG).setFirstRowColor(ROW_BG).setSecondRowColor(ALT_ROW_BG);
   sheet.setRowHeight(1, 44);
   sheet.getRange(2, 1, rows - 1, n).setWrap(true).setVerticalAlignment('top');
   sheet.getRange(2, 1, rows - 1, 1).setNumberFormat(DATE_FORMAT);
@@ -130,6 +127,9 @@ function headerKeys(sheet) {
 
 function keyFor(heading) {
   for (var i = 0; i < COLUMNS.length; i++) if (COLUMNS[i][1] === heading) return COLUMNS[i][0];
+  // Older layouts had a separate "Q3 · Other (typed)" column per question.
+  var m = /^(Q\d+) · Other \(typed\)$/.exec(heading);
+  if (m) for (var j = 0; j < COLUMNS.length; j++) if (COLUMNS[j][1].indexOf(m[1] + ' · ') === 0) return COLUMNS[j][0] + '_other';
   return RENAMED[heading] || heading;
 }
 
@@ -139,7 +139,24 @@ function normalise(data) {
     var nk = RENAMED[k] || k;
     if (out[nk] === undefined || out[nk] === '') out[nk] = data[k];
   });
-  return out;
+  return mergeOther(out);
+}
+
+// Folds each "<question>_other" answer into its question, replacing the "Other" choice with "Other: <typed text>".
+function mergeOther(data) {
+  Object.keys(data).forEach(function (k) {
+    var m = /^(.*)_other$/.exec(k);
+    if (!m) return;
+    var typed = String(data[k] || '').trim();
+    if (typed) {
+      var parts = String(data[m[1]] || '').split('; ').filter(Boolean);
+      var i = parts.indexOf('Other');
+      if (i > -1) parts[i] = 'Other: ' + typed; else parts.push('Other: ' + typed);
+      data[m[1]] = parts.join('; ');
+    }
+    delete data[k];
+  });
+  return data;
 }
 
 function cell(key, v) {
