@@ -864,7 +864,6 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     CITIES.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
     city.addEventListener('input', function () { S.a.q10_city = city.value.trim(); save(); syncAbout(); });
     body.appendChild(city); body.appendChild(dl);
-    body.appendChild(el('p', 's-legal', 'Pick from the list or type any city, town or village.'));
     aboutBtn = addFoot('Next →');
     syncAbout();
   }
