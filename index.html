@@ -684,8 +684,8 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
       o: ['Today', 'Sometime this week', 'Sometime this month', 'Honestly, can’t remember', OTHER] },
     { id: 'q2_brand_on_hand', type: 'multi', q: 'Which lip balm is on you right now? In your bag, pocket or desk.', grid: true, none: 'I don’t have one on me',
       o: ['Vaseline', 'Himalaya Herbals', 'Maybelline', 'Nivea', 'SUGAR Cosmetics', 'Dot & Key', 'Laneige', 'Indie Wild', 'Lakmé', 'Minimalist', OTHER, 'I don’t have one on me'] },
-    { id: 'q3_last_bought_where', type: 'single', q: 'Where did you buy your last one?', grid: true,
-      o: ['Chemist or pharmacy', 'Supermarket or kirana', 'Nykaa', 'Amazon or Flipkart', 'Blinkit, Zepto or Instamart', 'A brand’s own website', 'Someone else bought it', 'Can’t remember', OTHER] },
+    { id: 'q3_where_buy', type: 'multi', q: 'Where do you usually buy lip balm?', grid: true, none: 'Can’t remember',
+      o: ['Chemist or pharmacy', 'Supermarket or kirana', 'Nykaa', 'Amazon or Flipkart', 'Blinkit, Zepto or Instamart', 'A brand’s own website', 'Someone else buys it for me', OTHER, 'Can’t remember'] },
     { id: 'q4_last_paid', type: 'single', q: 'Roughly what did you pay for it?', grid: true,
       o: ['Under ₹100', '₹100–299', '₹300–600', '₹601–900', 'More than ₹900', 'Don’t remember', OTHER] },
     { id: 'q5_why_stopped', type: 'multi', max: 2, q: 'Think about the last lip balm you stopped using. What happened?', grid: true, none: 'Still on the same one',
@@ -706,7 +706,7 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
   var CITIES = ['Bengaluru', 'Mumbai', 'Delhi', 'Gurugram', 'Noida', 'Ghaziabad', 'Faridabad', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Jaipur', 'Udaipur', 'Jodhpur', 'Lucknow', 'Kanpur', 'Varanasi', 'Prayagraj', 'Agra', 'Chandigarh', 'Mohali', 'Ludhiana', 'Amritsar', 'Dehradun', 'Shimla', 'Indore', 'Bhopal', 'Gwalior', 'Nagpur', 'Nashik', 'Aurangabad', 'Thane', 'Navi Mumbai', 'Goa', 'Mangaluru', 'Mysuru', 'Hubballi', 'Belagavi', 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Puducherry', 'Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Warangal', 'Bhubaneswar', 'Cuttack', 'Raipur', 'Ranchi', 'Jamshedpur', 'Patna', 'Guwahati', 'Shillong', 'Siliguri', 'Srinagar', 'Jammu', 'A town or village in India', 'Outside India'];
   var HEARD = ['I know the founder', 'A friend sent it', 'Instagram or social', OTHER];
 
-  var KEY = 'mbh_survey_v4';
+  var KEY = 'mbh_survey_v5';
   function fresh(utm) { return { a: {}, i: 0, started: Date.now(), id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), utm: utm }; }
   var params = new URLSearchParams(location.search);
   var S = store(KEY) || fresh({ source: params.get('utm_source') || '', medium: params.get('utm_medium') || '', campaign: params.get('utm_campaign') || '', ref: document.referrer || '' });
