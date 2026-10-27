@@ -1,7 +1,7 @@
 /**
  * Misbeehave survey → Google Sheet
  *
- * 1. Create a new Google Sheet. Extensions → Apps Script.
+ * 1. Standalone Apps Script project (script.google.com) that writes to SHEET_ID below.
  * 2. Delete what's there, paste this whole file, click Save.
  * 3. Deploy → New deployment → type "Web app".
  *      Execute as: Me
@@ -11,12 +11,14 @@
  *
  * Each finished survey becomes one row. Headers are created automatically.
  */
+var SHEET_ID = '1UMbkkVFPL-ZlbD9Y2fKVr9kN5XBhMtIO9Gc6UtpotbA';
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     var data = JSON.parse(e.postData.contents);
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
     var keys = Object.keys(data);
 
     var headers = sheet.getLastRow() === 0 ? [] : sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
