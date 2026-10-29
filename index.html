@@ -705,12 +705,17 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
   var GENDERS = ['Woman', 'Man', 'Non-binary', 'Prefer not to say'];
   var CITIES = ['Bengaluru', 'Mumbai', 'Delhi', 'Gurugram', 'Noida', 'Ghaziabad', 'Faridabad', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Jaipur', 'Udaipur', 'Jodhpur', 'Lucknow', 'Kanpur', 'Varanasi', 'Prayagraj', 'Agra', 'Chandigarh', 'Mohali', 'Ludhiana', 'Amritsar', 'Dehradun', 'Shimla', 'Indore', 'Bhopal', 'Gwalior', 'Nagpur', 'Nashik', 'Aurangabad', 'Thane', 'Navi Mumbai', 'Goa', 'Mangaluru', 'Mysuru', 'Hubballi', 'Belagavi', 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Puducherry', 'Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Warangal', 'Bhubaneswar', 'Cuttack', 'Raipur', 'Ranchi', 'Jamshedpur', 'Patna', 'Guwahati', 'Shillong', 'Siliguri', 'Srinagar', 'Jammu', 'A town or village in India', 'Outside India'];
 
-  var KEY = 'mbh_survey_v6';
+  var KEY = 'mbh_survey_v7';
   function fresh(utm) { return { a: {}, i: 0, started: Date.now(), id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), utm: utm }; }
   var params = new URLSearchParams(location.search);
   var S = store(KEY) || fresh({ source: params.get('utm_source') || '', medium: params.get('utm_medium') || '', campaign: params.get('utm_campaign') || '', ref: document.referrer || '' });
   if (!S.a) S.a = {};
-  function save() { store(KEY, S); }
+  var dirty = false;
+  function save() {
+    if (S.a.q1_last_used && !S.date) S.date = istDate(new Date());
+    dirty = true;
+    store(KEY, S);
+  }
   function opts(q) {
     if (!q.shuffle) return q.o;
     S.order = S.order || {};
@@ -723,14 +728,14 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     }
     return saved;
   }
-  save();
+  save(); dirty = false;
 
   var body = document.getElementById('sBody'), back = document.getElementById('sBack');
   var countEl = document.getElementById('sCount'), bar = document.getElementById('sBar');
   var N = Q.length, busy = false;
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
-  function go(i, dir) { S.i = i; save(); render(dir); keepInView(); if (window.mbhAnimQ) window.mbhAnimQ(); }
+  function go(i, dir) { S.i = i; save(); if (dir === 'in') syncProgress('in progress'); render(dir); keepInView(); if (window.mbhAnimQ) window.mbhAnimQ(); }
   function keepInView() { var c = document.getElementById('scard').getBoundingClientRect(); if (c.top < 0) window.scrollBy({ top: c.top - 16, behavior: 'smooth' }); }
   function next() { if (S.i < N - 1) go(S.i + 1, 'in'); }
 
@@ -885,24 +890,24 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     name.value = S.a.name || ''; name.style.marginBottom = '18px'; body.appendChild(name);
     var inp = field('Your email', 'sEmail', 'email', { placeholder: 'queenbee@email.com', autocomplete: 'email', inputMode: 'email' });
     inp.value = S.a.email || ''; inp.style.marginBottom = '18px'; body.appendChild(inp);
-    var phone = field('Phone number (optional)', 'sPhone', 'tel', { autocomplete: 'tel', inputMode: 'tel', maxLength: 16, placeholder: '+91 98765 43210' });
-    var note = el('p', 's-legal', 'Please drop your number if you’re okay with a quick 10-minute call. We’d love to hear more.');
-    note.style.margin = '0 0 10px'; body.appendChild(note);
+    var phone = field('Phone number', 'sPhone', 'tel', { autocomplete: 'tel', inputMode: 'tel', maxLength: 16, placeholder: '+91 98765 43210' });
     phone.value = S.a.phone || ''; body.appendChild(phone);
     var err = el('p', 's-err'); body.appendChild(err);
-    body.appendChild(el('p', 's-legal', 'We’ll only use these to send your code and launch news, and to call you if you shared your number. No spam, ever.'));
+    body.appendChild(el('p', 's-legal', 'We’re taking your email and number to send you details about your discount coupon.'));
     var btn = addFoot('Claim my 50% off');
+    var blurTimer;
     [[name, 'name'], [inp, 'email'], [phone, 'phone']].forEach(function (f) {
       f[0].addEventListener('input', function () { S.a[f[1]] = f[0].value.trim(); save(); err.textContent = ''; });
       f[0].addEventListener('keydown', function (e) { if (e.key === 'Enter') btn.click(); });
+      f[0].addEventListener('blur', function () { clearTimeout(blurTimer); blurTimer = setTimeout(function () { syncProgress('in progress'); }, 1000); });
     });
     function fail(field, msg) { err.textContent = msg; field.focus(); }
     btn.onclick = function () {
-      var n = name.value.trim(), v = inp.value.trim(), ph = phone.value.trim(), clean = '';
-      if (n.length < 2) return fail(name, 'Tell us your name first.');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return fail(inp, 'That email looks off. Try again?');
+      var v = inp.value.trim(), ph = phone.value.trim(), clean = '';
+      if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return fail(inp, 'That email looks off. Check it, or leave it blank.');
       if (ph && !(clean = cleanPhone(ph))) return fail(phone, 'That number looks off. Check it, or leave it blank.');
-      S.a.name = n; S.a.email = v; S.a.phone = clean; btn.disabled = true; btn.textContent = 'Sending…';
+      clearTimeout(blurTimer);
+      S.a.name = name.value.trim(); S.a.email = v; S.a.phone = clean; btn.disabled = true; btn.textContent = 'Sending…';
       submit().then(function () { S.done = true; save(); render('in'); updateBand(); keepInView(); });
     };
   }
@@ -924,11 +929,11 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     return p.year + '-' + p.month + '-' + p.day + ' ' + p.hour + ':' + p.minute;
   }
 
-  function payload() {
-    var a = S.a;
+  function payload(status) {
+    var a = S.a, now = new Date();
     function j(x) { return Array.isArray(x) ? x.join('; ') : (x || ''); }
     function picked(id) { var v = a[id]; return Array.isArray(v) ? v.indexOf(OTHER) > -1 : v === OTHER; }
-    var row = { date: istDate(new Date()), name: j(a.name), email: j(a.email), phone: j(a.phone) };
+    var row = { date: S.date || istDate(now), name: j(a.name), email: j(a.email), phone: j(a.phone) };
     Q.forEach(function (q) {
       if (q.type === 'single' || q.type === 'multi') {
         row[q.id] = j(a[q.id]);
@@ -939,18 +944,47 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     row.utm_source = S.utm.source; row.utm_medium = S.utm.medium; row.utm_campaign = S.utm.campaign; row.referrer = S.utm.ref;
     row.device = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
     row.duration_sec = Math.round((Date.now() - S.started) / 1000);
+    row.status = status;
+    row.reached_question = status === 'completed' ? N : S.i + 1;
+    row.updated_at = istDate(now);
     row.response_id = S.id;
     return row;
   }
 
+  function send(data) {
+    return fetch(RESPONSES_ENDPOINT, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) });
+  }
+
   function submit() {
-    var data = payload();
+    clearTimeout(syncTimer); syncTimer = null;
+    var data = payload('completed');
     if (!RESPONSES_ENDPOINT) { console.warn('[Misbeehave] No RESPONSES_ENDPOINT set. Response not sent:', JSON.stringify(data)); return Promise.resolve(); }
-    var p = fetch(RESPONSES_ENDPOINT, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
-      .catch(function (e) { console.warn('[Misbeehave] Send failed', e); store('mbh_unsent', data); });
+    var p = send(data).catch(function (e) { console.warn('[Misbeehave] Send failed', e); store('mbh_unsent', data); });
     var timeout = new Promise(function (r) { setTimeout(r, 6000); });
     return Promise.race([p, timeout]);
   }
+
+  // Partial responses: one row per response_id, updated as the person goes.
+  // At most one send every 2s; a send that has to wait uses the latest answers.
+  var lastSync = 0, syncTimer = null;
+  function canSync() { return RESPONSES_ENDPOINT && !S.done && !!S.a.q1_last_used; }
+  function syncProgress(status) {
+    if (!canSync() || syncTimer) return;
+    var wait = lastSync + 2000 - Date.now();
+    if (wait > 0) { syncTimer = setTimeout(function () { syncTimer = null; syncProgress(status); }, wait); return; }
+    lastSync = Date.now(); dirty = false;
+    send(payload(status)).catch(function (e) { console.warn('[Misbeehave] Progress sync failed', e); });
+  }
+  function flushProgress() {
+    if (!canSync() || !dirty) return;
+    clearTimeout(syncTimer); syncTimer = null;
+    lastSync = Date.now(); dirty = false;
+    var body = JSON.stringify(payload('in progress'));
+    if (navigator.sendBeacon && navigator.sendBeacon(RESPONSES_ENDPOINT, new Blob([body], { type: 'text/plain' }))) return;
+    fetch(RESPONSES_ENDPOINT, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushProgress(); });
+  window.addEventListener('pagehide', flushProgress);
 
   function renderDone() {
     back.disabled = true;
