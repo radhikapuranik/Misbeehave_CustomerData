@@ -20,8 +20,8 @@
  * "Raw backup" tab first).
  *
  * A second tab, "Polished", is rebuilt from it after every answer: readable
- * headings, newest first, and only people who skipped at most MAX_MISSING
- * questions. POST {"action":"refresh"} to rebuild it on demand.
+ * headings, same row order as Responses, and only people who skipped at most
+ * MAX_MISSING questions. POST {"action":"refresh"} to rebuild it on demand.
  */
 var SHEET_ID = '1UMbkkVFPL-ZlbD9Y2fKVr9kN5XBhMtIO9Gc6UtpotbA';
 var TAB = 'Responses';
@@ -181,7 +181,6 @@ function buildPolished_() {
       return String(v).split(';').map(function (t) { return t.trim(); }).filter(String).join(', ');
     }));
   });
-  rows.sort(function (a, b) { return (b[0] instanceof Date ? b[0] : 0) - (a[0] instanceof Date ? a[0] : 0); });
 
   var ss = raw.getParent();
   var sheet = ss.getSheetByName(POLISHED_NAME) || ss.insertSheet(POLISHED_NAME, 1);
