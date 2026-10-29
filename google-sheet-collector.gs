@@ -18,12 +18,41 @@
  * If the survey questions change, update COLUMNS and run rebuild() once from
  * the editor to re-lay-out existing rows (the old layout is copied to a dated
  * "Raw backup" tab first).
+ *
+ * A second tab, "Polished", is rebuilt from it after every answer: no name,
+ * email or phone, newest first, and only people who skipped at most
+ * MAX_MISSING questions. POST {"action":"refresh"} to rebuild it on demand.
  */
 var SHEET_ID = '1UMbkkVFPL-ZlbD9Y2fKVr9kN5XBhMtIO9Gc6UtpotbA';
 var TAB = 'Responses';
 var DATE_FORMAT = 'd mmm yyyy, h:mm am/pm';
 var DATE_KEYS = ['date', 'updated_at'];
 var HEADER_BG = '#2b1a14', ROW_BG = '#ffffff', ALT_ROW_BG = '#f1f1f1';
+
+var POLISHED_NAME = 'Polished';
+var POLISHED_HEADER_BG = '#8A1A14';
+var MAX_MISSING = 2;
+
+// Polished tab: payload key → heading. Columns appear in this order.
+var POLISHED = [
+  ['date', 'Date'],
+  ['q1_last_used', 'Last used lip balm'],
+  ['q2_brand_on_hand', 'Lip balm on them now'],
+  ['q3_where_buy', 'Where they usually buy'],
+  ['q4_last_paid', 'Paid for last one'],
+  ['q5_why_stopped', 'Why they stopped the last one'],
+  ['q6_how_long_lasts', 'How long one lasts'],
+  ['q7_when_most', 'When they use it most'],
+  ['q8_bought_6mo', 'Bought in last 6 months'],
+  ['q9_what_mattered', 'What mattered most'],
+  ['q10_age', 'Age'],
+  ['q10_gender', 'Gender'],
+  ['q10_city', 'City'],
+  ['utm_source', 'Came from'],
+  ['device', 'Device'],
+  ['duration_sec', 'Time taken (min)'],
+  ['status', 'Status']
+];
 
 // [payload key, column heading, column width]
 var COLUMNS = [
@@ -67,7 +96,9 @@ function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    var data = normalise(JSON.parse(e.postData.contents));
+    var body = JSON.parse(e.postData.contents);
+    if (body.action === 'refresh') { buildPolished_(); return ContentService.createTextOutput('refreshed'); }
+    var data = normalise(body);
     var sheet = responsesSheet();
     var keys = headerKeys(sheet);
     Object.keys(data).forEach(function (k) {
@@ -88,6 +119,7 @@ function doPost(e) {
     }
     sheet.getRange(r, 1, 1, keys.length).setWrap(true).setVerticalAlignment('top');
     DATE_KEYS.forEach(function (k) { var c = keys.indexOf(k) + 1; if (c > 0) sheet.getRange(r, c).setNumberFormat(DATE_FORMAT); });
+    try { buildPolished_(); } catch (err) { console.error(err); }
     return ContentService.createTextOutput('ok');
   } finally {
     lock.releaseLock();
@@ -120,6 +152,51 @@ function rebuild() {
       return keys.map(function (k) { return cell(k, o[k]); });
     }));
   }
+}
+
+// Rewrites the Polished tab from the Responses tab.
+function buildPolished_() {
+  var raw = responsesSheet();
+  if (raw.getLastRow() < 2) return;
+  var values = raw.getRange(1, 1, raw.getLastRow(), raw.getLastColumn()).getValues();
+  var idx = {};
+  values[0].map(keyFor).forEach(function (k, i) { idx[k] = i; });
+  var cols = POLISHED.filter(function (c) { return idx[c[0]] !== undefined; });
+  var questions = cols.filter(function (c) { return /^q[1-9]_/.test(c[0]); });
+
+  var rows = [];
+  values.slice(1).forEach(function (src) {
+    if (src.join('') === '') return;
+    var missing = questions.filter(function (c) { return String(src[idx[c[0]]]).trim() === ''; }).length;
+    if (missing > MAX_MISSING) return;
+    rows.push(cols.map(function (c) {
+      var v = src[idx[c[0]]];
+      if (c[0] === 'date') return v instanceof Date ? v : cell('date', v);
+      if (c[0] === 'duration_sec') return v === '' ? '' : Math.round(Number(v) / 6) / 10;
+      // Multi-choice answers arrive as "a; b"; "Other: …" is already merged in.
+      return String(v).split(';').map(function (t) { return t.trim(); }).filter(String).join(', ');
+    }));
+  });
+  rows.sort(function (a, b) { return (b[0] instanceof Date ? b[0] : 0) - (a[0] instanceof Date ? a[0] : 0); });
+
+  var ss = raw.getParent();
+  var sheet = ss.getSheetByName(POLISHED_NAME) || ss.insertSheet(POLISHED_NAME, 1);
+  sheet.clear();
+  sheet.getBandings().forEach(function (b) { b.remove(); });
+  var n = cols.length;
+  sheet.getRange(1, 1, 1, n).setValues([cols.map(function (c) { return c[1]; })]);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, n).setValues(rows);
+    sheet.getRange(2, 1, rows.length, 1).setNumberFormat(DATE_FORMAT);
+  }
+  var all = sheet.getRange(1, 1, rows.length + 1, n);
+  all.setWrap(true).setVerticalAlignment('top');
+  all.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false)
+    .setHeaderRowColor(POLISHED_HEADER_BG).setFirstRowColor(ROW_BG).setSecondRowColor(ALT_ROW_BG);
+  sheet.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#FFFFFF');
+  sheet.setFrozenRows(1);
+  sheet.setFrozenColumns(1);
+  sheet.setColumnWidths(1, n, 190);
 }
 
 // Row number holding this response_id, or -1.
