@@ -19,9 +19,9 @@
  * the editor to re-lay-out existing rows (the old layout is copied to a dated
  * "Raw backup" tab first).
  *
- * A second tab, "Polished", is rebuilt from it after every answer: no name,
- * email or phone, newest first, and only people who skipped at most
- * MAX_MISSING questions. POST {"action":"refresh"} to rebuild it on demand.
+ * A second tab, "Polished", is rebuilt from it after every answer: readable
+ * headings, newest first, and only people who skipped at most MAX_MISSING
+ * questions. POST {"action":"refresh"} to rebuild it on demand.
  */
 var SHEET_ID = '1UMbkkVFPL-ZlbD9Y2fKVr9kN5XBhMtIO9Gc6UtpotbA';
 var TAB = 'Responses';
@@ -36,6 +36,9 @@ var MAX_MISSING = 2;
 // Polished tab: payload key → heading. Columns appear in this order.
 var POLISHED = [
   ['date', 'Date'],
+  ['name', 'Name'],
+  ['email', 'Email'],
+  ['phone', 'Phone'],
   ['q1_last_used', 'Last used lip balm'],
   ['q2_brand_on_hand', 'Lip balm on them now'],
   ['q3_where_buy', 'Where they usually buy'],
@@ -173,6 +176,7 @@ function buildPolished_() {
       var v = src[idx[c[0]]];
       if (c[0] === 'date') return v instanceof Date ? v : cell('date', v);
       if (c[0] === 'duration_sec') return v === '' ? '' : Math.round(Number(v) / 6) / 10;
+      if (c[0] === 'phone') return cell('phone', String(v));
       // Multi-choice answers arrive as "a; b"; "Other: …" is already merged in.
       return String(v).split(';').map(function (t) { return t.trim(); }).filter(String).join(', ');
     }));
