@@ -883,7 +883,7 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     }
     var name = field('Your name', 'sName', 'text', { autocomplete: 'name', maxLength: 60, placeholder: 'Your name' });
     name.value = S.a.name || ''; name.style.marginBottom = '18px'; body.appendChild(name);
-    var inp = field('Your email', 'sEmail', 'email', { placeholder: 'you@loudmouth.in', autocomplete: 'email', inputMode: 'email' });
+    var inp = field('Your email', 'sEmail', 'email', { placeholder: 'queenbee@email.com', autocomplete: 'email', inputMode: 'email' });
     inp.value = S.a.email || ''; inp.style.marginBottom = '18px'; body.appendChild(inp);
     var phone = field('Phone number (optional)', 'sPhone', 'tel', { autocomplete: 'tel', inputMode: 'tel', maxLength: 16, placeholder: '+91 98765 43210' });
     var note = el('p', 's-legal', 'Please drop your number if you’re okay with a quick 10-minute call. We’d love to hear more.');
