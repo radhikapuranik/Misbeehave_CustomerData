@@ -705,7 +705,7 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
   var GENDERS = ['Woman', 'Man', 'Non-binary', 'Prefer not to say'];
   var CITIES = ['Bengaluru', 'Mumbai', 'Delhi', 'Gurugram', 'Noida', 'Ghaziabad', 'Faridabad', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Jaipur', 'Udaipur', 'Jodhpur', 'Lucknow', 'Kanpur', 'Varanasi', 'Prayagraj', 'Agra', 'Chandigarh', 'Mohali', 'Ludhiana', 'Amritsar', 'Dehradun', 'Shimla', 'Indore', 'Bhopal', 'Gwalior', 'Nagpur', 'Nashik', 'Aurangabad', 'Thane', 'Navi Mumbai', 'Goa', 'Mangaluru', 'Mysuru', 'Hubballi', 'Belagavi', 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Puducherry', 'Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Warangal', 'Bhubaneswar', 'Cuttack', 'Raipur', 'Ranchi', 'Jamshedpur', 'Patna', 'Guwahati', 'Shillong', 'Siliguri', 'Srinagar', 'Jammu', 'A town or village in India', 'Outside India'];
 
-  var KEY = 'mbh_survey_v5';
+  var KEY = 'mbh_survey_v6';
   function fresh(utm) { return { a: {}, i: 0, started: Date.now(), id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), utm: utm }; }
   var params = new URLSearchParams(location.search);
   var S = store(KEY) || fresh({ source: params.get('utm_source') || '', medium: params.get('utm_medium') || '', campaign: params.get('utm_campaign') || '', ref: document.referrer || '' });
@@ -867,21 +867,42 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     syncAbout();
   }
 
+  function cleanPhone(v) {
+    var d = v.replace(/[\s\-()]/g, '');
+    var m = /^(?:\+91|91|0)?([6-9]\d{9})$/.exec(d);
+    return m ? '+91' + m[1] : null;
+  }
+
   function renderEmail() {
     body.appendChild(el('span', 's-hint', 'Last one'));
-    var lab = el('label', 's-sub', 'Your email'); lab.htmlFor = 'sEmail'; body.appendChild(lab);
-    var inp = el('input', 's-in'); inp.type = 'email'; inp.id = 'sEmail'; inp.placeholder = 'you@loudmouth.in'; inp.autocomplete = 'email'; inp.inputMode = 'email';
-    inp.value = S.a.email || '';
-    body.appendChild(inp);
+    function field(label, id, type, attrs) {
+      var lab = el('label', 's-sub', label); lab.htmlFor = id; body.appendChild(lab);
+      var inp = el('input', 's-in'); inp.type = type; inp.id = id;
+      Object.keys(attrs).forEach(function (k) { inp[k] = attrs[k]; });
+      return inp;
+    }
+    var name = field('Your name', 'sName', 'text', { autocomplete: 'name', maxLength: 60, placeholder: 'Your name' });
+    name.value = S.a.name || ''; name.style.marginBottom = '18px'; body.appendChild(name);
+    var inp = field('Your email', 'sEmail', 'email', { placeholder: 'you@loudmouth.in', autocomplete: 'email', inputMode: 'email' });
+    inp.value = S.a.email || ''; inp.style.marginBottom = '18px'; body.appendChild(inp);
+    var phone = field('Phone number (optional)', 'sPhone', 'tel', { autocomplete: 'tel', inputMode: 'tel', maxLength: 16, placeholder: '+91 98765 43210' });
+    var note = el('p', 's-legal', 'Please drop your number if you’re okay with a quick 10-minute call. We’d love to hear more.');
+    note.style.margin = '0 0 10px'; body.appendChild(note);
+    phone.value = S.a.phone || ''; body.appendChild(phone);
     var err = el('p', 's-err'); body.appendChild(err);
-    body.appendChild(el('p', 's-legal', 'We’ll only use it to send your reward and launch news. No spam, ever.'));
+    body.appendChild(el('p', 's-legal', 'We’ll only use these to send your code and launch news, and to call you if you shared your number. No spam, ever.'));
     var btn = addFoot('Claim my 50% off');
-    inp.addEventListener('input', function () { S.a.email = inp.value.trim(); save(); err.textContent = ''; });
-    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') btn.click(); });
+    [[name, 'name'], [inp, 'email'], [phone, 'phone']].forEach(function (f) {
+      f[0].addEventListener('input', function () { S.a[f[1]] = f[0].value.trim(); save(); err.textContent = ''; });
+      f[0].addEventListener('keydown', function (e) { if (e.key === 'Enter') btn.click(); });
+    });
+    function fail(field, msg) { err.textContent = msg; field.focus(); }
     btn.onclick = function () {
-      var v = inp.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { err.textContent = 'That email looks off. Try again?'; inp.focus(); return; }
-      S.a.email = v; btn.disabled = true; btn.textContent = 'Sending…';
+      var n = name.value.trim(), v = inp.value.trim(), ph = phone.value.trim(), clean = '';
+      if (n.length < 2) return fail(name, 'Tell us your name first.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return fail(inp, 'That email looks off. Try again?');
+      if (ph && !(clean = cleanPhone(ph))) return fail(phone, 'That number looks off. Check it, or leave it blank.');
+      S.a.name = n; S.a.email = v; S.a.phone = clean; btn.disabled = true; btn.textContent = 'Sending…';
       submit().then(function () { S.done = true; save(); render('in'); updateBand(); keepInView(); });
     };
   }
@@ -896,10 +917,18 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     return b;
   }
 
+  function istDate(d) {
+    var p = {};
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+    return p.year + '-' + p.month + '-' + p.day + ' ' + p.hour + ':' + p.minute;
+  }
+
   function payload() {
-    var a = S.a, row = { response_id: S.id, submitted_at: new Date().toISOString(), duration_sec: Math.round((Date.now() - S.started) / 1000) };
+    var a = S.a;
     function j(x) { return Array.isArray(x) ? x.join('; ') : (x || ''); }
     function picked(id) { var v = a[id]; return Array.isArray(v) ? v.indexOf(OTHER) > -1 : v === OTHER; }
+    var row = { date: istDate(new Date()), name: j(a.name), email: j(a.email), phone: j(a.phone) };
     Q.forEach(function (q) {
       if (q.type === 'single' || q.type === 'multi') {
         row[q.id] = j(a[q.id]);
@@ -907,9 +936,10 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
       }
     });
     row.q10_age = j(a.q10_age); row.q10_gender = j(a.q10_gender); row.q10_city = j(a.q10_city);
-    row.email = j(a.email);
     row.utm_source = S.utm.source; row.utm_medium = S.utm.medium; row.utm_campaign = S.utm.campaign; row.referrer = S.utm.ref;
     row.device = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+    row.duration_sec = Math.round((Date.now() - S.started) / 1000);
+    row.response_id = S.id;
     return row;
   }
 
@@ -928,7 +958,8 @@ var RESPONSES_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyi120WWNSARs4
     bar.style.width = '100%';
     var d = el('div', 's-done');
     d.appendChild(el('span', 's-hint', 'Survey complete'));
-    var big = el('div', 'big'); big.innerHTML = 'You’re in<span>.</span>'; d.appendChild(big);
+    var first = (S.a.name || '').split(/\s+/)[0];
+    var big = el('div', 'big', first ? 'You’re in, ' + first : 'You’re in'); big.appendChild(el('span', null, '.')); d.appendChild(big);
     d.appendChild(el('p', null, 'Thank you for being honest. The hive heard every word.'));
     var tk = el('div', 'ticket');
     tk.appendChild(el('div', 'l', '50%'));

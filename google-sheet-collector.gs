@@ -23,8 +23,10 @@ var HEADER_BG = '#2b1a14', ROW_BG = '#ffffff', ALT_ROW_BG = '#f1f1f1';
 
 // [payload key, column heading, column width]
 var COLUMNS = [
-  ['submitted_at', 'Submitted at', 150],
+  ['date', 'Date', 150],
+  ['name', 'Name', 160],
   ['email', 'Email', 220],
+  ['phone', 'Phone', 130],
   ['q1_last_used', 'Q1 · Last put on lip balm', 170],
   ['q2_brand_on_hand', 'Q2 · Lip balm on them right now', 220],
   ['q3_where_buy', 'Q3 · Where they usually buy', 220],
@@ -37,17 +39,18 @@ var COLUMNS = [
   ['q10_age', 'Age', 80],
   ['q10_gender', 'Gender', 110],
   ['q10_city', 'City', 130],
-  ['duration_sec', 'Time taken (sec)', 100],
   ['utm_source', 'UTM source', 110],
   ['utm_medium', 'UTM medium', 110],
   ['utm_campaign', 'UTM campaign', 120],
   ['referrer', 'Referrer', 180],
   ['device', 'Device', 90],
+  ['duration_sec', 'Time taken (sec)', 100],
   ['response_id', 'Response ID', 140]
 ];
 
 // Keys used by earlier versions of the survey → their current key.
 var RENAMED = {
+  submitted_at: 'date', 'Submitted at': 'date',
   q3_last_bought_where: 'q3_where_buy', q3_last_bought_where_other: 'q3_where_buy_other',
   q6_bought_6mo: 'q8_bought_6mo', q6_bought_6mo_other: 'q8_bought_6mo_other',
   q9_age: 'q10_age', q9_gender: 'q10_gender', q9_city: 'q10_city'
@@ -66,7 +69,7 @@ function doPost(e) {
     sheet.appendRow(keys.map(function (k) { return cell(k, data[k]); }));
     var r = sheet.getLastRow();
     sheet.getRange(r, 1, 1, keys.length).setWrap(true).setVerticalAlignment('top');
-    sheet.getRange(r, keys.indexOf('submitted_at') + 1).setNumberFormat(DATE_FORMAT);
+    sheet.getRange(r, keys.indexOf('date') + 1).setNumberFormat(DATE_FORMAT);
     return ContentService.createTextOutput('ok');
   } finally {
     lock.releaseLock();
@@ -161,6 +164,12 @@ function mergeOther(data) {
 
 function cell(key, v) {
   if (v === undefined || v === null) return '';
-  if (key === 'submitted_at' && !(v instanceof Date) && v !== '') { var d = new Date(v); return isNaN(d) ? v : d; }
+  if (key === 'date' && !(v instanceof Date) && v !== '') {
+    // The survey sends Indian time as "YYYY-MM-DD HH:mm"; older rows used ISO timestamps.
+    var s = String(v), d = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s) ? new Date(s.replace(' ', 'T') + ':00+05:30') : new Date(s);
+    return isNaN(d) ? v : d;
+  }
+  // Leading apostrophe keeps "+91…" as text instead of a number.
+  if (key === 'phone' && v !== '') return "'" + v;
   return v;
 }
