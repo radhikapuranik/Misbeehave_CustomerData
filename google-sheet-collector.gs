@@ -21,7 +21,10 @@
  *
  * A second tab, "Polished", is rebuilt from it after every answer: readable
  * headings, same row order as Responses, and only people who skipped at most
- * MAX_MISSING questions. POST {"action":"refresh"} to rebuild it on demand.
+ * MAX_MISSING questions. A third tab, "All responses", is an exact copy of
+ * the Responses rows from people who answered every question, filled in every
+ * REQUIRED_EXTRA field and completed the survey, newest first.
+ * POST {"action":"refresh"} to rebuild both on demand.
  */
 var SHEET_ID = '1UMbkkVFPL-ZlbD9Y2fKVr9kN5XBhMtIO9Gc6UtpotbA';
 var TAB = 'Responses';
@@ -32,6 +35,10 @@ var HEADER_BG = '#2b1a14', ROW_BG = '#ffffff', ALT_ROW_BG = '#f1f1f1';
 var POLISHED_NAME = 'Polished';
 var POLISHED_HEADER_BG = '#8A1A14';
 var MAX_MISSING = 2;
+
+var ALL_RESPONSES_NAME = 'All responses';
+// Contact fields that must be filled for a row to appear on "All responses".
+var REQUIRED_EXTRA = ['name', 'email', 'phone'];
 
 // Polished tab: payload key → heading. Columns appear in this order.
 var POLISHED = [
@@ -100,7 +107,7 @@ function doPost(e) {
   lock.waitLock(20000);
   try {
     var body = JSON.parse(e.postData.contents);
-    if (body.action === 'refresh') { buildPolished_(); return ContentService.createTextOutput('refreshed'); }
+    if (body.action === 'refresh') { buildPolished_(); buildAllResponses_(); return ContentService.createTextOutput('refreshed'); }
     var data = normalise(body);
     var sheet = responsesSheet();
     var keys = headerKeys(sheet);
@@ -123,6 +130,7 @@ function doPost(e) {
     sheet.getRange(r, 1, 1, keys.length).setWrap(true).setVerticalAlignment('top');
     DATE_KEYS.forEach(function (k) { var c = keys.indexOf(k) + 1; if (c > 0) sheet.getRange(r, c).setNumberFormat(DATE_FORMAT); });
     try { buildPolished_(); } catch (err) { console.error(err); }
+    try { buildAllResponses_(); } catch (err) { console.error(err); }
     return ContentService.createTextOutput('ok');
   } finally {
     lock.releaseLock();
@@ -200,6 +208,43 @@ function buildPolished_() {
   sheet.setFrozenRows(1);
   sheet.setFrozenColumns(1);
   sheet.setColumnWidths(1, n, 190);
+}
+
+// Rewrites the "All responses" tab: Responses rows with nothing missing, newest first.
+function buildAllResponses_() {
+  var raw = responsesSheet();
+  if (raw.getLastRow() < 1) return;
+  var values = raw.getRange(1, 1, raw.getLastRow(), raw.getLastColumn()).getValues();
+  var head = values[0], keys = head.map(keyFor);
+  var required = keys.map(function (k, i) { return /^q\d+_/.test(k) && !/_other$/.test(k) || REQUIRED_EXTRA.indexOf(k) > -1 ? i : -1; })
+    .filter(function (i) { return i > -1; });
+  var statusCol = keys.indexOf('status'), dateCol = keys.indexOf('date'), phoneCol = keys.indexOf('phone');
+
+  var rows = values.slice(1).filter(function (r) {
+    if (statusCol > -1 && r[statusCol] !== 'completed') return false;
+    return required.every(function (i) { return String(r[i]).trim() !== ''; });
+  });
+  if (dateCol > -1) rows.sort(function (a, b) { return (b[dateCol] instanceof Date ? b[dateCol] : 0) - (a[dateCol] instanceof Date ? a[dateCol] : 0); });
+  if (phoneCol > -1) rows.forEach(function (r) { r[phoneCol] = cell('phone', String(r[phoneCol])); });
+
+  var ss = raw.getParent();
+  var sheet = ss.getSheetByName(ALL_RESPONSES_NAME) || ss.insertSheet(ALL_RESPONSES_NAME, 2);
+  sheet.clear();
+  var n = head.length;
+  sheet.getRange(1, 1, 1, n).setValues([head])
+    .setFontWeight('bold').setFontColor('#f6eedf').setBackground(HEADER_BG)
+    .setWrap(true).setVerticalAlignment('middle');
+  sheet.setRowHeight(1, 44);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, n).setValues(rows).setWrap(true).setVerticalAlignment('top');
+    keys.forEach(function (k, i) { if (DATE_KEYS.indexOf(k) > -1) sheet.getRange(2, i + 1, rows.length, 1).setNumberFormat(DATE_FORMAT); });
+  }
+  keys.forEach(function (k, i) {
+    var col = COLUMNS.filter(function (c) { return c[0] === k; })[0];
+    sheet.setColumnWidth(i + 1, col ? col[2] : 130);
+  });
+  sheet.setFrozenRows(1);
+  sheet.setFrozenColumns(1);
 }
 
 // Row number holding this response_id, or -1.
